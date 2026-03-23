@@ -1,0 +1,2647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TUG - Work Meeting Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --field: #3abfb0;
+      --field-shadow: #2fa395;
+      --strip: #2d5f7a;
+      --strip-deep: #234c63;
+      --blue: #4ab4e8;
+      --blue-deep: #2b87b6;
+      --red: #f05c5c;
+      --red-deep: #b73f3f;
+      --rope: #d4893a;
+      --rope-strand: #c06c1a;
+      --marker: #f7d44c;
+      --skin: #f5c998;
+      --outline: #1a1a1a;
+      --cream: #fff7e8;
+      --ink: #173348;
+      --panel: rgba(255, 247, 232, 0.92);
+      --panel-strong: rgba(255, 247, 232, 0.98);
+      --shadow: 0 16px 0 rgba(26, 26, 26, 0.2);
+      --scorebar-h: 116px;
+      --strip-h: 148px;
+      --boundary-pad: 18px;
+      --safe-max-w: 560px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--field);
+      color: var(--cream);
+      font-family: "Nunito", system-ui, sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body {
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.12), transparent 28%),
+        radial-gradient(circle at 80% 8%, rgba(255, 255, 255, 0.08), transparent 18%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 24%);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .screen {
+      min-height: 100vh;
+      min-height: 100svh;
+    }
+
+    #setup-screen {
+      min-height: 100vh;
+      min-height: 100svh;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .setup-card {
+      width: min(100%, 420px);
+      margin: auto 0;
+      padding: 22px 20px 20px;
+      border: 4px solid var(--outline);
+      border-radius: 28px;
+      background: var(--panel-strong);
+      color: var(--ink);
+      box-shadow: var(--shadow);
+    }
+
+    .setup-title {
+      margin: 0 0 18px;
+      font-family: "Bebas Neue", Impact, sans-serif;
+      letter-spacing: 0.06em;
+      line-height: 0.95;
+      font-size: clamp(2.8rem, 10vw, 4.7rem);
+      color: var(--outline);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field-label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .field-label span {
+      color: var(--strip);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.84rem;
+    }
+
+    .field-label input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 4px solid var(--outline);
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 1rem;
+    }
+
+    .role-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .role-button {
+      position: relative;
+      min-height: 78px;
+      padding: 12px;
+      border-radius: 22px;
+      border: 4px solid var(--outline);
+      background: #ffffff;
+      color: var(--ink);
+      text-align: left;
+      box-shadow: 0 10px 0 rgba(26, 26, 26, 0.12);
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+
+    .role-button:hover,
+    .role-button:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 0 rgba(26, 26, 26, 0.18);
+      outline: none;
+    }
+
+    .role-button.is-selected {
+      background: #fef2cf;
+      transform: translateY(-2px);
+    }
+
+    .role-button[data-role="blue"] .role-swatch {
+      background: var(--blue);
+    }
+
+    .role-button[data-role="red"] .role-swatch {
+      background: var(--red);
+    }
+
+    .role-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .role-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid var(--outline);
+    }
+
+    .role-name {
+      font-size: 1.16rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .role-status {
+      font-size: 0.86rem;
+      line-height: 1.35;
+      color: rgba(23, 51, 72, 0.78);
+    }
+
+    .primary-button,
+    .secondary-button,
+    .ghost-button,
+    .taunt-button,
+    .mute-button,
+    .pull-button {
+      border: 4px solid var(--outline);
+      border-radius: 999px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+    }
+
+    .primary-button:disabled,
+    .secondary-button:disabled,
+    .ghost-button:disabled,
+    .taunt-button:disabled,
+    .mute-button:disabled,
+    .pull-button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .primary-button:not(:disabled):hover,
+    .secondary-button:not(:disabled):hover,
+    .ghost-button:not(:disabled):hover,
+    .taunt-button:not(:disabled):hover,
+    .mute-button:not(:disabled):hover,
+    .pull-button:not(:disabled):hover {
+      transform: translateY(-2px);
+    }
+
+    .primary-button {
+      padding: 15px 20px;
+      background: var(--marker);
+      color: var(--outline);
+      box-shadow: 0 10px 0 rgba(26, 26, 26, 0.15);
+    }
+
+    .secondary-button {
+      padding: 13px 18px;
+      background: #ffffff;
+      color: var(--strip);
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.13);
+    }
+
+    .ghost-button {
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.18);
+      color: var(--cream);
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.15);
+    }
+
+    .setup-actions {
+      margin-top: 8px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .setup-status {
+      min-height: 24px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+      color: var(--strip);
+    }
+
+    #game-screen {
+      display: none;
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
+        var(--field);
+    }
+
+    #game-screen.is-visible {
+      display: block;
+    }
+
+    #game-shell {
+      min-height: 100vh;
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      position: relative;
+    }
+
+    .scorebar {
+      position: relative;
+      z-index: 3;
+      min-height: var(--scorebar-h);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 14px clamp(12px, 4vw, 22px);
+      background: rgba(16, 46, 64, 0.18);
+      backdrop-filter: blur(8px);
+      border-bottom: 4px solid rgba(26, 26, 26, 0.15);
+    }
+
+    .scorebar[data-role="red"] {
+      flex-direction: row-reverse;
+      border-top: 4px solid rgba(26, 26, 26, 0.15);
+      border-bottom: none;
+    }
+
+    .scorebar[data-role="red"] .score-main,
+    .scorebar[data-role="red"] .title-row,
+    .scorebar[data-role="red"] .rate-line {
+      text-align: right;
+    }
+
+    .scorebar[data-role="red"] .title-row,
+    .scorebar[data-role="red"] .rate-line {
+      justify-content: flex-end;
+    }
+
+    .scorebar[data-role="red"] .rate-line {
+      flex-direction: row-reverse;
+    }
+
+    .score-badge {
+      width: clamp(60px, 15vw, 80px);
+      height: clamp(60px, 15vw, 80px);
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 4px solid var(--outline);
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      letter-spacing: 0.04em;
+      color: var(--outline);
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.16);
+    }
+
+    .scorebar[data-role="blue"] .score-badge {
+      background: var(--blue);
+    }
+
+    .scorebar[data-role="red"] .score-badge {
+      background: var(--red);
+    }
+
+    .score-main {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .player-name {
+      min-width: 0;
+      font-size: clamp(1.2rem, 4vw, 1.95rem);
+      line-height: 1;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .role-pill {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 3px solid var(--outline);
+      background: rgba(255, 255, 255, 0.18);
+      color: var(--cream);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .rate-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .rate-text {
+      white-space: nowrap;
+    }
+
+    .power-bar {
+      min-width: 0;
+      flex: 1;
+      height: 18px;
+      overflow: hidden;
+      border-radius: 999px;
+      border: 4px solid var(--outline);
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .power-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      transition: width 120ms linear;
+    }
+
+    .scorebar[data-role="blue"] .power-fill {
+      background: linear-gradient(90deg, #8ee1ff, var(--blue));
+    }
+
+    .scorebar[data-role="red"] .power-fill {
+      background: linear-gradient(90deg, #ff9b9b, var(--red));
+    }
+
+    .pip-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .scorebar[data-role="red"] .pip-row {
+      justify-content: flex-end;
+    }
+
+    .pip {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid var(--outline);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .pip.is-filled {
+      background: var(--marker);
+    }
+
+    #arena {
+      position: relative;
+      display: grid;
+      grid-template-rows: minmax(140px, 1fr) var(--strip-h) minmax(140px, 1fr);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    #arena::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent 0, rgba(255, 255, 255, 0.07) 48%, transparent 52%, transparent 100%),
+        repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05) 0 2px,
+          transparent 2px 54px
+        );
+      opacity: 0.55;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .field {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .field.top {
+      align-items: flex-end;
+      padding-bottom: clamp(18px, 4vw, 36px);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.05));
+    }
+
+    .field.bottom {
+      align-items: flex-start;
+      padding-top: clamp(18px, 4vw, 36px);
+      background:
+        linear-gradient(0deg, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.05), transparent);
+    }
+
+    .character-wrap {
+      position: relative;
+      width: clamp(118px, 23vw, 168px);
+      max-width: var(--safe-max-w);
+    }
+
+    .character {
+      display: block;
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 10px 0 rgba(26, 26, 26, 0.18));
+      transform-origin: center center;
+      transition: transform 120ms ease;
+    }
+
+    .character-wrap.is-pulling .character {
+      transform: translateY(4px) scale(1.02);
+    }
+
+    .field.bottom .character {
+      transform: rotate(180deg);
+    }
+
+    .field.bottom .character-wrap.is-pulling .character {
+      transform: rotate(180deg) translateY(4px) scale(1.02);
+    }
+
+    .character-wrap.is-tired .character {
+      animation: wobble 380ms linear infinite;
+    }
+
+    .field.bottom .character-wrap.is-tired .character {
+      animation: wobble-flipped 380ms linear infinite;
+    }
+
+    .tired-tag,
+    .taunt-bubble {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid var(--outline);
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.14);
+      pointer-events: none;
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    .taunt-bubble {
+      top: -16px;
+      min-width: 62px;
+      min-height: 48px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 247, 232, 0.96);
+      color: var(--outline);
+      font-size: 1.45rem;
+      opacity: 0;
+      transform: translate(-50%, 10px);
+    }
+
+    .taunt-bubble.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .tired-tag {
+      bottom: -6px;
+      min-width: 112px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      text-align: center;
+      background: var(--marker);
+      color: var(--outline);
+      font-size: 0.84rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      opacity: 0;
+    }
+
+    .field.bottom .tired-tag {
+      top: -2px;
+      bottom: auto;
+    }
+
+    .tired-tag.is-visible {
+      opacity: 1;
+    }
+
+    #rope-svg {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      transition: transform 120ms ease;
+    }
+
+    .centre-strip {
+      position: relative;
+      z-index: 2;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, var(--strip), var(--strip-deep));
+      border-top: 4px solid var(--outline);
+      border-bottom: 4px solid var(--outline);
+      box-shadow: inset 0 10px 0 rgba(255, 255, 255, 0.05), inset 0 -12px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .strip-boundary {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.12);
+    }
+
+    .strip-boundary.top {
+      top: var(--boundary-pad);
+    }
+
+    .strip-boundary.bottom {
+      bottom: var(--boundary-pad);
+    }
+
+    .strip-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(2rem, 8vw, 3.3rem);
+      letter-spacing: 0.14em;
+      color: rgba(255, 255, 255, 0.18);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #anchor-diamond {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 56px;
+      height: 32px;
+      background: var(--marker);
+      border: 4px solid var(--outline);
+      clip-path: polygon(0 50%, 14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.16);
+      z-index: 2;
+      transition: transform 120ms ease;
+    }
+
+    #room-ribbon {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 8;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 4px solid var(--outline);
+      background: rgba(255, 247, 232, 0.9);
+      color: var(--strip);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.14);
+      pointer-events: none;
+    }
+
+    #hud-controls {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mute-button {
+      min-width: 98px;
+      padding: 11px 14px;
+      background: rgba(255, 247, 232, 0.95);
+      color: var(--strip);
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.14);
+    }
+
+    #spectator-chip {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 4px solid var(--outline);
+      background: rgba(255, 247, 232, 0.94);
+      color: var(--strip);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.14);
+    }
+
+    #spectator-chip.is-visible {
+      display: inline-flex;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(17, 41, 58, 0.42);
+      backdrop-filter: blur(6px);
+    }
+
+    #overlay.is-visible {
+      display: flex;
+    }
+
+    .overlay-card {
+      width: min(100%, 520px);
+      max-height: min(88vh, 760px);
+      overflow-y: auto;
+      padding: 22px 20px 20px;
+      border-radius: 28px;
+      border: 4px solid var(--outline);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+      color: var(--ink);
+      text-align: center;
+    }
+
+    .overlay-card.is-countdown {
+      width: min(100%, 300px);
+      padding: 20px 16px;
+      background: rgba(255, 247, 232, 0.95);
+    }
+
+    .overlay-kicker {
+      margin: 0;
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      color: var(--strip);
+    }
+
+    .overlay-title {
+      margin: 6px 0 10px;
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(2.2rem, 10vw, 4.5rem);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      color: var(--outline);
+    }
+
+    .overlay-copy {
+      margin: 0 auto 16px;
+      max-width: 34ch;
+      line-height: 1.45;
+      font-size: 1rem;
+    }
+
+    .overlay-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .matchup-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .matchup-pill {
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 4px solid var(--outline);
+      color: var(--outline);
+    }
+
+    .matchup-pill.blue {
+      background: var(--blue);
+    }
+
+    .matchup-pill.red {
+      background: var(--red);
+    }
+
+    .overlay-pips {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .overlay-pip {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 4px solid var(--outline);
+      background: rgba(45, 95, 122, 0.12);
+    }
+
+    .overlay-pip.is-filled {
+      background: var(--marker);
+    }
+
+    .stats-card {
+      margin-top: 16px;
+      padding: 16px 14px;
+      border-radius: 22px;
+      border: 4px solid rgba(26, 26, 26, 0.12);
+      background: rgba(45, 95, 122, 0.08);
+      text-align: left;
+    }
+
+    .stats-title {
+      margin: 0 0 12px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--strip);
+    }
+
+    .stats-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .stats-bar {
+      height: 18px;
+      overflow: hidden;
+      border-radius: 999px;
+      border: 4px solid var(--outline);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .stats-bar-fill {
+      width: 0%;
+      height: 100%;
+      transition: width 120ms ease;
+    }
+
+    .graph-shell {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 20px;
+      border: 4px solid rgba(26, 26, 26, 0.12);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .graph-legend {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 3px solid var(--outline);
+      background: rgba(255, 247, 232, 0.96);
+      color: var(--ink);
+      font-size: 0.74rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 0;
+      border-top: 4px solid currentColor;
+      border-radius: 999px;
+    }
+
+    .rate-graph {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .stats-row[data-role="blue"] .stats-bar-fill {
+      background: var(--blue);
+    }
+
+    .stats-row[data-role="red"] .stats-bar-fill {
+      background: var(--red);
+    }
+
+    #taunt-panel {
+      position: absolute;
+      left: 12px;
+      bottom: calc(var(--scorebar-h) + 14px);
+      z-index: 9;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: min(70vw, 260px);
+    }
+
+    .taunt-button {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(255, 247, 232, 0.94);
+      color: var(--outline);
+      font-size: 1.45rem;
+      box-shadow: 0 8px 0 rgba(26, 26, 26, 0.14);
+    }
+
+    #pull-button {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--scorebar-h) + env(safe-area-inset-bottom, 0px) + 18px);
+      z-index: 9;
+      width: min(32vw, 144px);
+      height: min(32vw, 144px);
+      transform: translateX(-50%);
+      border-radius: 50%;
+      display: none;
+      place-items: center;
+      background: var(--marker);
+      color: var(--outline);
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(1.6rem, 7vw, 2.6rem);
+      line-height: 0.9;
+      box-shadow: 0 12px 0 rgba(26, 26, 26, 0.16);
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    body.touch-capable #pull-button {
+      display: grid;
+    }
+
+    #pull-button.is-hidden {
+      display: none !important;
+    }
+
+    .tiny-note {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.82);
+    }
+
+    @keyframes wobble {
+      0% { transform: rotate(0deg) translateY(0); }
+      25% { transform: rotate(-2deg) translateY(2px); }
+      50% { transform: rotate(1.5deg) translateY(0); }
+      75% { transform: rotate(-1deg) translateY(2px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+
+    @keyframes wobble-flipped {
+      0% { transform: rotate(180deg) translateY(0); }
+      25% { transform: rotate(178deg) translateY(2px); }
+      50% { transform: rotate(181.5deg) translateY(0); }
+      75% { transform: rotate(179deg) translateY(2px); }
+      100% { transform: rotate(180deg) translateY(0); }
+    }
+
+    @media (max-width: 720px) {
+      :root {
+        --scorebar-h: 108px;
+        --strip-h: 140px;
+      }
+
+      .scorebar {
+        gap: 12px;
+      }
+
+      .score-main {
+        gap: 6px;
+      }
+
+      .rate-line {
+        font-size: 0.83rem;
+      }
+
+      .stats-row {
+        grid-template-columns: auto 1fr;
+      }
+
+      .stats-row .stats-value {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .scorebar {
+        padding-top: 18px;
+      }
+
+      .role-pill {
+        font-size: 0.66rem;
+      }
+
+      .player-name {
+        font-size: 1.08rem;
+      }
+
+      #room-ribbon {
+        top: 10px;
+        max-width: calc(100vw - 140px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      #pull-button {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="setup-screen" class="screen">
+    <div class="setup-card">
+      <h1 class="setup-title">TUG</h1>
+
+      <form id="join-form" class="form-grid" novalidate>
+        <label class="field-label">
+          <span>Your name</span>
+          <input id="name-input" type="text" maxlength="20" placeholder="Alex" required>
+        </label>
+
+        <label class="field-label">
+          <span>Room code</span>
+          <input id="room-input" type="text" maxlength="24" placeholder="weekly-sync" required>
+        </label>
+
+        <label class="field-label">
+          <span>Ably key</span>
+          <input id="ably-input" type="password" placeholder="xxxxxx.yyyyyy:zzzzzz" autocomplete="off" required>
+        </label>
+
+        <div class="field-label">
+          <span>Preferred colour</span>
+          <div class="role-row" id="role-picker">
+            <button class="role-button is-selected" type="button" data-role="blue">
+              <div class="role-top">
+                <span class="role-swatch"></span>
+                <span class="role-name">Blue</span>
+              </div>
+              <div class="role-status" id="blue-role-status">Open lane</div>
+            </button>
+            <button class="role-button" type="button" data-role="red">
+              <div class="role-top">
+                <span class="role-swatch"></span>
+                <span class="role-name">Red</span>
+              </div>
+              <div class="role-status" id="red-role-status">Open lane</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="setup-actions">
+          <button id="join-button" class="primary-button" type="submit">Join The Rope</button>
+          <div id="setup-status" class="setup-status" aria-live="polite"></div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="game-screen" class="screen" aria-live="polite">
+    <div id="game-shell">
+      <div id="room-ribbon">Room</div>
+
+      <div id="hud-controls">
+        <div id="spectator-chip">Spectating</div>
+        <button id="mute-button" class="mute-button" type="button">Sound Off</button>
+      </div>
+
+      <div class="scorebar" data-role="blue">
+        <div class="score-badge" id="blue-hits">0</div>
+        <div class="score-main">
+          <div class="title-row">
+            <div class="player-name" id="blue-name">Blue</div>
+            <div class="role-pill" id="blue-pill">Waiting</div>
+          </div>
+          <div class="rate-line">
+            <span class="rate-text" id="blue-rate">0.0 hits/s</span>
+            <div class="power-bar"><div class="power-fill" id="blue-power"></div></div>
+          </div>
+          <div class="pip-row" id="blue-pips"></div>
+        </div>
+      </div>
+
+      <div id="arena">
+        <svg id="rope-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M50 8 C58 12 58 18 50 22 C42 26 42 32 50 36 C58 40 58 46 50 50 C42 54 42 60 50 64 C58 68 58 74 50 78 C42 82 42 88 50 92" fill="none" stroke="#1a1a1a" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M50 8 C58 12 58 18 50 22 C42 26 42 32 50 36 C58 40 58 46 50 50 C42 54 42 60 50 64 C58 68 58 74 50 78 C42 82 42 88 50 92" fill="none" stroke="#ff972f" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M50 8 C43 12 43 18 50 22 C57 26 57 32 50 36 C43 40 43 46 50 50 C57 54 57 60 50 64 C43 68 43 74 50 78 C57 82 57 88 50 92" fill="none" stroke="#d46d16" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+
+        <div class="field top">
+          <div class="character-wrap" id="blue-wrap">
+            <div class="taunt-bubble" id="blue-taunt"></div>
+            <div class="tired-tag" id="blue-tired">Sweating</div>
+            <svg class="character" viewBox="0 0 180 300" aria-hidden="true">
+              <ellipse cx="108" cy="142" rx="42" ry="62" fill="rgba(23, 51, 72, 0.14)"></ellipse>
+              <ellipse cx="66" cy="74" rx="16" ry="11" fill="#8b542f" stroke="var(--outline)" stroke-width="4"></ellipse>
+              <ellipse cx="136" cy="90" rx="16" ry="11" fill="#8b542f" stroke="var(--outline)" stroke-width="4"></ellipse>
+              <path d="M101 42 C75 42 61 58 61 86 L61 160 C61 193 82 215 110 223 C138 217 161 194 161 166 L161 87 C161 58 146 42 121 42 Z" fill="var(--blue)" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M96 68 L118 68 L130 186 L111 186 L92 118 Z" fill="var(--outline)"></path>
+              <path d="M72 156 L116 142 L123 168 L80 183 Z" fill="var(--skin)" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M122 145 L148 180 L135 193 L109 158 Z" fill="var(--skin)" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M67 179 C58 176 50 181 48 190 C46 200 54 208 66 210 L80 196 Z" fill="#ff9a34" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M131 194 C140 187 149 187 155 194 C160 200 158 211 147 214 L133 206 Z" fill="#ff9a34" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <circle cx="110" cy="227" r="31" fill="var(--skin)" stroke="var(--outline)" stroke-width="4"></circle>
+              <path d="M80 223 C83 204 97 192 114 192 C132 192 146 203 147 223 C141 236 129 244 110 244 C95 244 84 236 80 223 Z" fill="var(--outline)"></path>
+              <path d="M95 241 L106 246 L101 257 L89 252 Z" fill="var(--outline)"></path>
+              <path d="M124 241 L112 246 L117 257 L129 252 Z" fill="var(--outline)"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="centre-strip" id="centre-strip">
+          <div class="strip-boundary top"></div>
+          <div class="strip-boundary bottom"></div>
+          <div class="strip-label" id="strip-label">HOLD THE LINE</div>
+          <div id="anchor-diamond" aria-hidden="true"></div>
+        </div>
+
+        <div class="field bottom">
+          <div class="character-wrap" id="red-wrap">
+            <div class="taunt-bubble" id="red-taunt"></div>
+            <div class="tired-tag" id="red-tired">Sweating</div>
+            <svg class="character" viewBox="0 0 180 300" aria-hidden="true">
+              <ellipse cx="108" cy="142" rx="42" ry="62" fill="rgba(23, 51, 72, 0.14)"></ellipse>
+              <ellipse cx="66" cy="74" rx="16" ry="11" fill="#8b542f" stroke="var(--outline)" stroke-width="4"></ellipse>
+              <ellipse cx="136" cy="90" rx="16" ry="11" fill="#8b542f" stroke="var(--outline)" stroke-width="4"></ellipse>
+              <path d="M101 42 C75 42 61 58 61 86 L61 160 C61 193 82 215 110 223 C138 217 161 194 161 166 L161 87 C161 58 146 42 121 42 Z" fill="var(--red)" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M96 68 L118 68 L130 186 L111 186 L92 118 Z" fill="var(--outline)"></path>
+              <path d="M72 156 L116 142 L123 168 L80 183 Z" fill="var(--skin)" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M122 145 L148 180 L135 193 L109 158 Z" fill="var(--skin)" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M67 179 C58 176 50 181 48 190 C46 200 54 208 66 210 L80 196 Z" fill="#ff9a34" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <path d="M131 194 C140 187 149 187 155 194 C160 200 158 211 147 214 L133 206 Z" fill="#ff9a34" stroke="var(--outline)" stroke-width="4" stroke-linejoin="round"></path>
+              <circle cx="110" cy="227" r="31" fill="var(--skin)" stroke="var(--outline)" stroke-width="4"></circle>
+              <path d="M80 223 C83 204 97 192 114 192 C132 192 146 203 147 223 C141 236 129 244 110 244 C95 244 84 236 80 223 Z" fill="var(--outline)"></path>
+              <path d="M95 241 L106 246 L101 257 L89 252 Z" fill="var(--outline)"></path>
+              <path d="M124 241 L112 246 L117 257 L129 252 Z" fill="var(--outline)"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div id="overlay"></div>
+      </div>
+
+      <div class="scorebar" data-role="red">
+        <div class="score-badge" id="red-hits">0</div>
+        <div class="score-main">
+          <div class="title-row">
+            <div class="player-name" id="red-name">Red</div>
+            <div class="role-pill" id="red-pill">Waiting</div>
+          </div>
+          <div class="rate-line">
+            <span class="rate-text" id="red-rate">0.0 hits/s</span>
+            <div class="power-bar"><div class="power-fill" id="red-power"></div></div>
+          </div>
+          <div class="pip-row" id="red-pips"></div>
+        </div>
+      </div>
+
+      <div id="taunt-panel">
+        <button class="taunt-button" type="button" data-taunt="💪" aria-label="Send flex taunt">💪</button>
+        <button class="taunt-button" type="button" data-taunt="😤" aria-label="Send grit taunt">😤</button>
+        <button class="taunt-button" type="button" data-taunt="🎉" aria-label="Send celebrate taunt">🎉</button>
+        <button class="taunt-button" type="button" data-taunt="😅" aria-label="Send sweat taunt">😅</button>
+      </div>
+    </div>
+
+    <button id="pull-button" class="pull-button" type="button">PULL!</button>
+  </section>
+
+  <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+  <script>
+    /*
+      ==========================================================
+      CONFIG
+      ==========================================================
+    */
+    const CONFIG = {
+      PULL_STEP: 0.8,
+      TIRED_PULL_STEP: 0.3,
+      ROPE_MAX: 50,
+      ROUNDS_TO_WIN: 3,
+      ABLY_TIMEOUT_MS: 10000,
+      RATE_WINDOW_MS: 2000,
+      FATIGUE_TRIGGER_HITS: 15,
+      FATIGUE_WINDOW_MS: 3000,
+      FATIGUE_DURATION_MS: 1500,
+      TAUNT_DURATION_MS: 1800,
+      TAUNT_COOLDOWN_MS: 3000,
+      COUNTDOWN_STEP_MS: 820,
+      RESOLVE_DELAY_MS: 150,
+      MAX_RATE_DISPLAY: 12,
+      CHANNEL_PREFIX: "tug-"
+    };
+
+    /*
+      ==========================================================
+      STATE
+      ==========================================================
+    */
+    const STATE = {
+      clientId: createId("client"),
+      screen: "setup",
+      joining: false,
+      roomCode: "",
+      ablyKey: "",
+      name: "",
+      preferredRole: "blue",
+      role: null,
+      isSpectator: false,
+      ably: null,
+      channel: null,
+      connected: false,
+      matchId: "",
+      phase: "waiting",
+      round: 1,
+      ropePos: 0,
+      suddenDeath: false,
+      countdownText: "",
+      pendingWinner: null,
+      roundTimerIds: [],
+      resolveTimerId: null,
+      roundHistory: [],
+      lastRoundStats: null,
+      renderedOverlayHtml: "",
+      roundStartedAt: 0,
+      roundDurationMs: 0,
+      lastSeriesSampleAt: 0,
+      tauntCooldownUntil: 0,
+      soundEnabled: false,
+      audioContext: null,
+      touchCapable: window.matchMedia("(hover: none), (pointer: coarse)").matches,
+      setupStatus: "",
+      roster: {
+        blue: null,
+        red: null,
+        spectators: []
+      },
+      players: {
+        blue: makePlayerState("Blue"),
+        red: makePlayerState("Red")
+      }
+    };
+
+    /*
+      ==========================================================
+      DOM
+      ==========================================================
+    */
+    const DOM = {
+      body: document.body,
+      setupScreen: document.getElementById("setup-screen"),
+      gameScreen: document.getElementById("game-screen"),
+      joinForm: document.getElementById("join-form"),
+      nameInput: document.getElementById("name-input"),
+      roomInput: document.getElementById("room-input"),
+      ablyInput: document.getElementById("ably-input"),
+      joinButton: document.getElementById("join-button"),
+      setupStatus: document.getElementById("setup-status"),
+      roleButtons: Array.from(document.querySelectorAll(".role-button")),
+      roleStatusBlue: document.getElementById("blue-role-status"),
+      roleStatusRed: document.getElementById("red-role-status"),
+      roomRibbon: document.getElementById("room-ribbon"),
+      spectatorChip: document.getElementById("spectator-chip"),
+      muteButton: document.getElementById("mute-button"),
+      overlay: document.getElementById("overlay"),
+      anchor: document.getElementById("anchor-diamond"),
+      stripLabel: document.getElementById("strip-label"),
+      centreStrip: document.getElementById("centre-strip"),
+      ropeSvg: document.getElementById("rope-svg"),
+      pullButton: document.getElementById("pull-button"),
+      tauntPanel: document.getElementById("taunt-panel"),
+      tauntButtons: Array.from(document.querySelectorAll(".taunt-button")),
+      blueWrap: document.getElementById("blue-wrap"),
+      redWrap: document.getElementById("red-wrap"),
+      blueTaunt: document.getElementById("blue-taunt"),
+      redTaunt: document.getElementById("red-taunt"),
+      blueTired: document.getElementById("blue-tired"),
+      redTired: document.getElementById("red-tired"),
+      score: {
+        blue: {
+          name: document.getElementById("blue-name"),
+          hits: document.getElementById("blue-hits"),
+          rate: document.getElementById("blue-rate"),
+          power: document.getElementById("blue-power"),
+          pill: document.getElementById("blue-pill"),
+          pips: document.getElementById("blue-pips")
+        },
+        red: {
+          name: document.getElementById("red-name"),
+          hits: document.getElementById("red-hits"),
+          rate: document.getElementById("red-rate"),
+          power: document.getElementById("red-power"),
+          pill: document.getElementById("red-pill"),
+          pips: document.getElementById("red-pips")
+        }
+      }
+    };
+
+    if (STATE.touchCapable) {
+      DOM.body.classList.add("touch-capable");
+    }
+
+    /*
+      ==========================================================
+      ABLY / NETWORK
+      ==========================================================
+    */
+    async function joinRoom(event) {
+      event.preventDefault();
+      if (STATE.joining) {
+        return;
+      }
+
+      const name = DOM.nameInput.value.trim().slice(0, 20);
+      const roomCode = sanitizeRoomCode(DOM.roomInput.value.trim());
+      const ablyKey = DOM.ablyInput.value.trim();
+
+      if (!name || !roomCode || !ablyKey) {
+        setSetupStatus("Enter your name, a room code, and the shared Ably key.");
+        return;
+      }
+
+      if (!window.Ably || !window.Ably.Realtime) {
+        setSetupStatus("Ably did not load from the CDN. Check your internet connection and reload.");
+        return;
+      }
+
+      STATE.joining = true;
+      STATE.name = name;
+      STATE.roomCode = roomCode;
+      STATE.ablyKey = ablyKey;
+      setSetupStatus("Connecting to Ably and joining the rope...");
+      render();
+
+      try {
+        cleanupAbly();
+        clearCountdownTimers();
+        clearResolveTimer();
+
+        STATE.ably = new Ably.Realtime({
+          key: STATE.ablyKey,
+          clientId: STATE.clientId,
+          echoMessages: false
+        });
+
+        setSetupStatus("Connecting to Ably...");
+        await waitForConnection(STATE.ably);
+        STATE.connected = true;
+
+        setSetupStatus("Joining room...");
+        STATE.channel = STATE.ably.channels.get(CONFIG.CHANNEL_PREFIX + STATE.roomCode);
+        await waitForChannel(STATE.channel);
+        await subscribeToMessages(STATE.channel);
+
+        setSetupStatus("Syncing player seats...");
+        await enterPresence(STATE.channel, {
+          name: STATE.name,
+          preferredRole: STATE.preferredRole,
+          joinedAt: Date.now()
+        });
+
+        await STATE.channel.presence.subscribe(handlePresenceMessage);
+        await refreshPresenceRoster();
+
+        STATE.screen = "game";
+        STATE.phase = haveBothPlayers() ? "ready" : "waiting";
+        STATE.round = 1;
+        STATE.matchId = "";
+
+        safePublish("lobby_hello", {
+          name: STATE.name,
+          role: STATE.preferredRole
+        });
+        safePublish("lobby_request", {});
+        if (STATE.isSpectator) {
+          safePublish("watch", { name: STATE.name });
+        }
+
+        setSetupStatus("");
+      } catch (error) {
+        console.error(error);
+        setSetupStatus(error && error.message ? error.message : "Could not join the room.");
+        cleanupAbly();
+      } finally {
+        STATE.joining = false;
+        render();
+      }
+    }
+
+    function subscribeToMessages(channel) {
+      return channel.subscribe((message) => {
+        const payload = message.data || {};
+        switch (message.name) {
+          case "lobby_hello":
+          case "watch":
+            refreshPresenceRoster().catch((error) => {
+              console.error("Presence refresh failed:", error);
+            });
+            break;
+          case "lobby_request":
+            safePublish("lobby_hello", { name: STATE.name, role: STATE.preferredRole });
+            refreshPresenceRoster().catch((error) => {
+              console.error("Presence refresh failed:", error);
+            });
+            break;
+          case "hit":
+            handleHitMessage(payload);
+            break;
+          case "round_start":
+            handleRoundStart(payload);
+            break;
+          case "round_end":
+            handleRoundEnd(payload);
+            break;
+          case "taunt":
+            handleTauntMessage(payload);
+            break;
+          default:
+            break;
+        }
+      });
+    }
+
+    async function refreshPresenceRoster() {
+      if (!STATE.channel) {
+        return;
+      }
+
+      const members = await getPresenceMembers(STATE.channel);
+      applyPresenceRoster(members);
+    }
+
+    function applyPresenceRoster(members) {
+      const roster = computeRoster(members);
+      STATE.roster = roster;
+
+      const localMember = roster.blue && roster.blue.clientId === STATE.clientId
+        ? { assignedRole: "blue", member: roster.blue }
+        : roster.red && roster.red.clientId === STATE.clientId
+          ? { assignedRole: "red", member: roster.red }
+          : null;
+
+      if (localMember) {
+        STATE.role = localMember.assignedRole;
+        STATE.isSpectator = false;
+      } else {
+        STATE.role = null;
+        STATE.isSpectator = true;
+      }
+
+      syncNamesFromRoster();
+
+      if (haveBothPlayers()) {
+        if (STATE.phase === "waiting") {
+          STATE.phase = STATE.matchId ? "ready" : "ready";
+        }
+      } else if (!["countdown", "playing", "resolving", "roundEnd", "matchEnd"].includes(STATE.phase)) {
+        STATE.phase = "waiting";
+      }
+
+      render();
+    }
+
+    function handlePresenceMessage() {
+      refreshPresenceRoster().catch((error) => {
+        console.error("Presence refresh failed:", error);
+      });
+    }
+
+    function computeRoster(members) {
+      const roster = {
+        blue: null,
+        red: null,
+        spectators: []
+      };
+      const ordered = members
+        .slice()
+        .sort((a, b) => {
+          const aTime = (a.data && a.data.joinedAt) || 0;
+          const bTime = (b.data && b.data.joinedAt) || 0;
+          if (aTime !== bTime) {
+            return aTime - bTime;
+          }
+          return String(a.clientId).localeCompare(String(b.clientId));
+        });
+
+      ordered.forEach((member) => {
+        const preferred = member.data && member.data.preferredRole === "red" ? "red" : "blue";
+        const other = preferred === "blue" ? "red" : "blue";
+        if (!roster[preferred]) {
+          roster[preferred] = member;
+        } else if (!roster[other]) {
+          roster[other] = member;
+        } else {
+          roster.spectators.push(member);
+        }
+      });
+
+      return roster;
+    }
+
+    function safePublish(name, payload) {
+      if (!STATE.channel) {
+        return;
+      }
+      try {
+        const maybePromise = STATE.channel.publish(name, payload);
+        if (maybePromise && typeof maybePromise.catch === "function") {
+          maybePromise.catch((error) => {
+            console.error("Publish failed:", name, error);
+          });
+        }
+      } catch (error) {
+        console.error("Publish failed:", name, error);
+      }
+    }
+
+    function handleHitMessage(payload) {
+      if (!payload || payload.clientId === STATE.clientId) {
+        return;
+      }
+      if (!["playing", "resolving"].includes(STATE.phase)) {
+        return;
+      }
+      if (!payload.matchId || payload.matchId !== STATE.matchId) {
+        return;
+      }
+      if (payload.round !== STATE.round) {
+        return;
+      }
+      if (!["blue", "red"].includes(payload.role)) {
+        return;
+      }
+
+      const player = STATE.players[payload.role];
+      const hitTime = Number(payload.sentAt) || Date.now();
+      player.hits = Number(payload.hits) || 0;
+      recordRemoteHit(player, hitTime, Number(payload.rate) || 0, Number(payload.peakRate) || 0, Number(payload.tiredUntil) || 0);
+      player.pulseUntil = Date.now() + 130;
+      STATE.ropePos = clamp(Number(payload.ropePos) || 0, -CONFIG.ROPE_MAX, CONFIG.ROPE_MAX);
+
+      maybeQueueRoundResolution();
+      if (STATE.soundEnabled) {
+        playHitSound(0.09, 160);
+      }
+      render();
+    }
+
+    function handleRoundStart(payload) {
+      if (!payload || !payload.matchId || !payload.round) {
+        return;
+      }
+
+      if (STATE.matchId !== payload.matchId || payload.reset || payload.round === 1) {
+        resetMatchState(payload.matchId);
+      }
+
+      if (STATE.phase === "countdown" && STATE.round === payload.round && STATE.matchId === payload.matchId) {
+        return;
+      }
+
+      startRound(payload.round, payload.matchId);
+    }
+
+    function handleRoundEnd(payload) {
+      if (!payload || payload.matchId !== STATE.matchId || payload.round !== STATE.round) {
+        return;
+      }
+      if (STATE.phase === "roundEnd" || STATE.phase === "matchEnd") {
+        return;
+      }
+
+      clearResolveTimer();
+      STATE.roundDurationMs = Number(payload.durationMs) || 0;
+      applyRoundSnapshot(payload.players || {});
+      STATE.ropePos = clamp(Number(payload.ropePos) || 0, -CONFIG.ROPE_MAX, CONFIG.ROPE_MAX);
+      finalizeRound(payload.winner, false, true);
+    }
+
+    function handleTauntMessage(payload) {
+      if (!payload || payload.matchId !== STATE.matchId || payload.round !== STATE.round) {
+        return;
+      }
+      if (!["blue", "red"].includes(payload.targetRole)) {
+        return;
+      }
+      const player = STATE.players[payload.targetRole];
+      player.taunt = String(payload.emoji || "");
+      player.tauntUntil = Date.now() + CONFIG.TAUNT_DURATION_MS;
+      render();
+    }
+
+    function waitForConnection(ably) {
+      return withTimeout(new Promise((resolve, reject) => {
+        if (ably.connection.state === "connected") {
+          resolve();
+          return;
+        }
+
+        const onConnected = () => {
+          cleanup();
+          resolve();
+        };
+        const onFailed = () => {
+          cleanup();
+          reject(new Error("Could not connect to Ably. Check the key and try again."));
+        };
+        const cleanup = () => {
+          ably.connection.off("connected", onConnected);
+          ably.connection.off("failed", onFailed);
+          ably.connection.off("suspended", onFailed);
+          ably.connection.off("closed", onFailed);
+        };
+
+        ably.connection.once("connected", onConnected);
+        ably.connection.once("failed", onFailed);
+        ably.connection.once("suspended", onFailed);
+        ably.connection.once("closed", onFailed);
+      }), CONFIG.ABLY_TIMEOUT_MS, "Ably connection timed out. Check the key and your network.");
+    }
+
+    function waitForChannel(channel) {
+      if (channel.state === "attached") {
+        return Promise.resolve();
+      }
+      return withTimeout(
+        channel.attach().catch((error) => {
+          throw new Error(formatAblyError(error, "Channel attach failed. Double-check the room and key."));
+        }),
+        CONFIG.ABLY_TIMEOUT_MS,
+        "Room join timed out while attaching the channel."
+      );
+    }
+
+    function enterPresence(channel, data) {
+      return withTimeout(
+        channel.presence.enter(data).catch((error) => {
+          throw new Error(formatAblyError(error, "Could not enter room presence. Try joining again."));
+        }),
+        CONFIG.ABLY_TIMEOUT_MS,
+        "Room join timed out while entering presence."
+      );
+    }
+
+    function getPresenceMembers(channel) {
+      return withTimeout(
+        channel.presence.get().catch((error) => {
+          throw new Error(formatAblyError(error, "Could not fetch room members from Ably."));
+        }),
+        CONFIG.ABLY_TIMEOUT_MS,
+        "Room sync timed out while fetching presence members."
+      );
+    }
+
+    function cleanupAbly() {
+      try {
+        if (STATE.channel) {
+          STATE.channel.presence.unsubscribe(handlePresenceMessage);
+          STATE.channel.unsubscribe();
+        }
+        if (STATE.ably) {
+          STATE.ably.close();
+        }
+      } catch (error) {
+        console.error(error);
+      }
+      STATE.ably = null;
+      STATE.channel = null;
+      STATE.connected = false;
+    }
+
+    /*
+      ==========================================================
+      LOBBY
+      ==========================================================
+    */
+    function syncNamesFromRoster() {
+      const blueMember = STATE.roster.blue;
+      const redMember = STATE.roster.red;
+
+      STATE.players.blue.displayName = blueMember ? safeName(blueMember.data && blueMember.data.name, "Blue") : "Open Slot";
+      STATE.players.red.displayName = redMember ? safeName(redMember.data && redMember.data.name, "Red") : "Open Slot";
+    }
+
+    function haveBothPlayers() {
+      return Boolean(STATE.roster.blue && STATE.roster.red);
+    }
+
+    function setPreferredRole(role) {
+      STATE.preferredRole = role === "red" ? "red" : "blue";
+      DOM.roleButtons.forEach((button) => {
+        button.classList.toggle("is-selected", button.dataset.role === STATE.preferredRole);
+      });
+      render();
+    }
+
+    function setSetupStatus(message) {
+      STATE.setupStatus = message || "";
+      render();
+    }
+
+    /*
+      ==========================================================
+      GAME LOOP
+      ==========================================================
+    */
+    function requestStart(kind) {
+      if (!haveBothPlayers() || STATE.isSpectator) {
+        return;
+      }
+
+      const nextRound = kind === "next" ? STATE.round + 1 : 1;
+      const needsReset = kind !== "next" || !STATE.matchId;
+      const matchId = needsReset ? createId("match") : STATE.matchId;
+
+      if (needsReset) {
+        resetMatchState(matchId);
+      }
+
+      safePublish("round_start", {
+        round: nextRound,
+        matchId,
+        reset: needsReset
+      });
+
+      startRound(nextRound, matchId);
+    }
+
+    function startRound(roundNumber, matchId) {
+      clearCountdownTimers();
+      clearResolveTimer();
+      resetRoundState();
+      STATE.matchId = matchId;
+      STATE.round = roundNumber;
+      STATE.suddenDeath = STATE.players.blue.wins === 2 && STATE.players.red.wins === 2;
+      STATE.phase = "countdown";
+
+      const sequence = [];
+      if (STATE.suddenDeath) {
+        sequence.push("SUDDEN DEATH");
+      }
+      sequence.push("3", "2", "1", "GO!");
+
+      sequence.forEach((label, index) => {
+        const timerId = window.setTimeout(() => {
+          STATE.countdownText = label;
+          if (STATE.soundEnabled) {
+            const frequency = label === "GO!" ? 660 : label === "SUDDEN DEATH" ? 320 : 520;
+            playCountdownSound(frequency);
+          }
+          render();
+        }, index * CONFIG.COUNTDOWN_STEP_MS);
+        STATE.roundTimerIds.push(timerId);
+      });
+
+      const endId = window.setTimeout(() => {
+        STATE.countdownText = "";
+        STATE.phase = "playing";
+        STATE.roundStartedAt = Date.now();
+        STATE.lastSeriesSampleAt = STATE.roundStartedAt;
+        captureRateSample(true);
+        render();
+      }, sequence.length * CONFIG.COUNTDOWN_STEP_MS);
+      STATE.roundTimerIds.push(endId);
+
+      render();
+    }
+
+    function resetMatchState(matchId) {
+      clearCountdownTimers();
+      clearResolveTimer();
+      STATE.matchId = matchId || "";
+      STATE.round = 1;
+      STATE.roundHistory = [];
+      STATE.lastRoundStats = null;
+      STATE.pendingWinner = null;
+      STATE.roundStartedAt = 0;
+      STATE.roundDurationMs = 0;
+      STATE.lastSeriesSampleAt = 0;
+      STATE.suddenDeath = false;
+      STATE.phase = haveBothPlayers() ? "ready" : "waiting";
+      Object.values(STATE.players).forEach((player) => {
+        player.wins = 0;
+      });
+      resetRoundState();
+    }
+
+    function resetRoundState() {
+      STATE.ropePos = 0;
+      STATE.countdownText = "";
+      STATE.pendingWinner = null;
+      STATE.roundStartedAt = 0;
+      STATE.roundDurationMs = 0;
+      STATE.lastSeriesSampleAt = 0;
+      Object.values(STATE.players).forEach((player) => {
+        player.hits = 0;
+        player.rate = 0;
+        player.peakRate = 0;
+        player.recentHits = [];
+        player.burstHits = [];
+        player.rateSeries = [];
+        player.fatigueUntil = 0;
+        player.pulseUntil = 0;
+        player.taunt = "";
+        player.tauntUntil = 0;
+      });
+      render();
+    }
+
+    function registerLocalHit() {
+      if (!canLocalHit()) {
+        return;
+      }
+
+      const role = STATE.role;
+      const player = STATE.players[role];
+      const now = Date.now();
+      const baseStep = STATE.suddenDeath ? CONFIG.PULL_STEP * 2 : CONFIG.PULL_STEP;
+      const tiredNow = isPlayerTired(player, now);
+      const step = tiredNow ? CONFIG.TIRED_PULL_STEP : baseStep;
+
+      player.hits += 1;
+      player.pulseUntil = now + 140;
+      applyHitWindows(player, now);
+      maybeTriggerFatigue(player, now);
+
+      STATE.ropePos = clamp(
+        STATE.ropePos + (role === "red" ? step : -step),
+        -CONFIG.ROPE_MAX,
+        CONFIG.ROPE_MAX
+      );
+
+      safePublish("hit", {
+        clientId: STATE.clientId,
+        matchId: STATE.matchId,
+        round: STATE.round,
+        role,
+        ropePos: STATE.ropePos,
+        hits: player.hits,
+        rate: Number(player.rate.toFixed(2)),
+        peakRate: Number(player.peakRate.toFixed(2)),
+        tiredUntil: player.fatigueUntil,
+        sentAt: now
+      });
+
+      if (STATE.soundEnabled) {
+        playHitSound(0.12, 210);
+      }
+
+      maybeQueueRoundResolution();
+      render();
+    }
+
+    function maybeQueueRoundResolution() {
+      if (Math.abs(STATE.ropePos) < CONFIG.ROPE_MAX) {
+        return;
+      }
+
+      STATE.pendingWinner = STATE.ropePos <= -CONFIG.ROPE_MAX ? "blue" : "red";
+      if (STATE.phase === "playing") {
+        STATE.phase = "resolving";
+      }
+      if (STATE.resolveTimerId) {
+        return;
+      }
+
+      STATE.resolveTimerId = window.setTimeout(() => {
+        STATE.resolveTimerId = null;
+        finalizeRound(STATE.pendingWinner, true);
+      }, CONFIG.RESOLVE_DELAY_MS);
+    }
+
+    function finalizeRound(winner, shouldPublish, winsAlreadyApplied) {
+      if (!winner || !["blue", "red"].includes(winner)) {
+        return;
+      }
+      if (STATE.phase === "roundEnd" || STATE.phase === "matchEnd") {
+        return;
+      }
+
+      clearResolveTimer();
+      if (!winsAlreadyApplied) {
+        captureRateSample(true);
+        STATE.roundDurationMs = STATE.roundStartedAt ? Math.max(0, Date.now() - STATE.roundStartedAt) : 0;
+      }
+      if (!winsAlreadyApplied) {
+        STATE.players[winner].wins += 1;
+      }
+      const matchWon = STATE.players[winner].wins >= CONFIG.ROUNDS_TO_WIN;
+      STATE.phase = matchWon ? "matchEnd" : "roundEnd";
+      STATE.lastRoundStats = buildRoundStats();
+      STATE.roundHistory.push({
+        round: STATE.round,
+        winner,
+        stats: STATE.lastRoundStats
+      });
+
+      if (shouldPublish) {
+        safePublish("round_end", {
+          matchId: STATE.matchId,
+          round: STATE.round,
+          winner,
+          ropePos: STATE.ropePos,
+          durationMs: STATE.roundDurationMs,
+          players: serializePlayerRoundState()
+        });
+      }
+
+      if (STATE.soundEnabled) {
+        playWinSound();
+      }
+
+      render();
+    }
+
+    function buildRoundStats() {
+      const durationMs = STATE.roundDurationMs || (STATE.roundStartedAt ? Math.max(0, Date.now() - STATE.roundStartedAt) : 0);
+      return {
+        durationMs,
+        blue: {
+          hits: STATE.players.blue.hits,
+          peakRate: Number(STATE.players.blue.peakRate.toFixed(1)),
+          wins: STATE.players.blue.wins,
+          series: STATE.players.blue.rateSeries.map((point) => ({ t: point.t, rate: point.rate }))
+        },
+        red: {
+          hits: STATE.players.red.hits,
+          peakRate: Number(STATE.players.red.peakRate.toFixed(1)),
+          wins: STATE.players.red.wins,
+          series: STATE.players.red.rateSeries.map((point) => ({ t: point.t, rate: point.rate }))
+        }
+      };
+    }
+
+    function serializePlayerRoundState() {
+      return {
+        blue: {
+          hits: STATE.players.blue.hits,
+          rate: Number(STATE.players.blue.rate.toFixed(2)),
+          peakRate: Number(STATE.players.blue.peakRate.toFixed(2)),
+          wins: STATE.players.blue.wins,
+          series: STATE.players.blue.rateSeries.map((point) => ({ t: point.t, rate: point.rate }))
+        },
+        red: {
+          hits: STATE.players.red.hits,
+          rate: Number(STATE.players.red.rate.toFixed(2)),
+          peakRate: Number(STATE.players.red.peakRate.toFixed(2)),
+          wins: STATE.players.red.wins,
+          series: STATE.players.red.rateSeries.map((point) => ({ t: point.t, rate: point.rate }))
+        }
+      };
+    }
+
+    function applyRoundSnapshot(playersPayload) {
+      ["blue", "red"].forEach((role) => {
+        const payload = playersPayload[role] || {};
+        const player = STATE.players[role];
+        player.hits = Number(payload.hits) || 0;
+        player.rate = Number(payload.rate) || 0;
+        player.peakRate = Number(payload.peakRate) || 0;
+        player.wins = Number(payload.wins) || 0;
+        player.rateSeries = Array.isArray(payload.series) ? payload.series.map((point) => ({
+          t: Number(point.t) || 0,
+          rate: Number(point.rate) || 0
+        })) : [];
+      });
+      STATE.lastRoundStats = buildRoundStats();
+    }
+
+    function canLocalHit() {
+      return Boolean(
+        STATE.channel &&
+        STATE.matchId &&
+        !STATE.isSpectator &&
+        STATE.role &&
+        STATE.phase === "playing" &&
+        haveBothPlayers()
+      );
+    }
+
+    /*
+      ==========================================================
+      RENDER
+      ==========================================================
+    */
+    function render() {
+      DOM.setupStatus.textContent = STATE.setupStatus;
+      DOM.joinButton.disabled = STATE.joining;
+
+      DOM.roleButtons.forEach((button) => {
+        button.classList.toggle("is-selected", button.dataset.role === STATE.preferredRole);
+      });
+
+      DOM.roleStatusBlue.textContent = describeRoleStatus("blue");
+      DOM.roleStatusRed.textContent = describeRoleStatus("red");
+
+      DOM.setupScreen.classList.toggle("hidden", STATE.screen !== "setup");
+      DOM.gameScreen.classList.toggle("is-visible", STATE.screen === "game");
+
+      DOM.roomRibbon.textContent = STATE.roomCode
+        ? "Room " + STATE.roomCode.toUpperCase() + "  •  " + describeLocalSeat()
+        : "Room";
+
+      DOM.spectatorChip.classList.toggle("is-visible", STATE.isSpectator);
+      DOM.spectatorChip.textContent = STATE.isSpectator
+        ? "Spectating"
+        : STATE.roster.spectators.length
+          ? STATE.roster.spectators.length + " Spectator" + (STATE.roster.spectators.length === 1 ? "" : "s")
+          : "";
+
+      DOM.muteButton.textContent = STATE.soundEnabled ? "Sound On" : "Sound Off";
+
+      renderScorebar("blue");
+      renderScorebar("red");
+      renderAnchor();
+      renderCharacters();
+      renderOverlay();
+      renderButtons();
+    }
+
+    function renderScorebar(role) {
+      const player = STATE.players[role];
+      const slot = DOM.score[role];
+      slot.name.textContent = player.displayName;
+      slot.hits.textContent = String(player.hits);
+      slot.rate.textContent = player.rate.toFixed(1) + " hits/s";
+      slot.power.style.width = clamp((player.rate / CONFIG.MAX_RATE_DISPLAY) * 100, 0, 100) + "%";
+      slot.pill.textContent = buildPillText(role);
+      slot.pips.innerHTML = "";
+      for (let i = 0; i < CONFIG.ROUNDS_TO_WIN; i += 1) {
+        const pip = document.createElement("span");
+        pip.className = "pip" + (i < player.wins ? " is-filled" : "");
+        slot.pips.appendChild(pip);
+      }
+    }
+
+    function buildPillText(role) {
+      const member = STATE.roster[role];
+      if (!member) {
+        return "Waiting";
+      }
+      if (member.clientId === STATE.clientId) {
+        return "You";
+      }
+      return "Live";
+    }
+
+    function renderAnchor() {
+      const halfStripHeight = (DOM.centreStrip.clientHeight / 2) - 18;
+      const translateY = (STATE.ropePos / CONFIG.ROPE_MAX) * halfStripHeight;
+      DOM.anchor.style.transform = "translate(-50%, calc(-50% + " + translateY.toFixed(2) + "px))";
+      DOM.ropeSvg.style.transform = "translateY(" + translateY.toFixed(2) + "px)";
+      DOM.blueWrap.style.transform = "translateY(" + translateY.toFixed(2) + "px)";
+      DOM.redWrap.style.transform = "translateY(" + translateY.toFixed(2) + "px)";
+
+      if (STATE.phase === "countdown") {
+        DOM.stripLabel.textContent = STATE.suddenDeath ? "FINAL ROUND" : "GET READY";
+      } else if (STATE.phase === "playing" || STATE.phase === "resolving") {
+        DOM.stripLabel.textContent = STATE.suddenDeath ? "SUDDEN DEATH" : "HOLD THE LINE";
+      } else if (STATE.phase === "roundEnd" || STATE.phase === "matchEnd") {
+        DOM.stripLabel.textContent = STATE.lastRoundStats ? "ROUND " + STATE.round + " DONE" : "HOLD THE LINE";
+      } else {
+        DOM.stripLabel.textContent = haveBothPlayers() ? "READY THE ROPE" : "WAITING";
+      }
+    }
+
+    function renderCharacters() {
+      const now = Date.now();
+      const blueTired = isPlayerTired(STATE.players.blue, now);
+      const redTired = isPlayerTired(STATE.players.red, now);
+      DOM.blueWrap.classList.toggle("is-tired", blueTired);
+      DOM.redWrap.classList.toggle("is-tired", redTired);
+      DOM.blueWrap.classList.toggle("is-pulling", now < STATE.players.blue.pulseUntil);
+      DOM.redWrap.classList.toggle("is-pulling", now < STATE.players.red.pulseUntil);
+      DOM.blueTired.classList.toggle("is-visible", blueTired);
+      DOM.redTired.classList.toggle("is-visible", redTired);
+      DOM.blueTaunt.textContent = STATE.players.blue.taunt || "";
+      DOM.redTaunt.textContent = STATE.players.red.taunt || "";
+      DOM.blueTaunt.classList.toggle("is-visible", now < STATE.players.blue.tauntUntil);
+      DOM.redTaunt.classList.toggle("is-visible", now < STATE.players.red.tauntUntil);
+    }
+
+    function renderButtons() {
+      const touchVisible = STATE.touchCapable && canLocalHit();
+      DOM.pullButton.classList.toggle("is-hidden", !touchVisible);
+      DOM.pullButton.disabled = !touchVisible;
+
+      const tauntsVisible = !STATE.isSpectator && STATE.phase === "playing" && Boolean(STATE.role);
+      DOM.tauntPanel.classList.toggle("hidden", !tauntsVisible);
+      DOM.tauntButtons.forEach((button) => {
+        button.disabled = !tauntsVisible || Date.now() < STATE.tauntCooldownUntil;
+      });
+    }
+
+    function renderOverlay() {
+      const overlay = buildOverlayModel();
+      if (!overlay) {
+        DOM.overlay.className = "";
+        if (STATE.renderedOverlayHtml) {
+          DOM.overlay.innerHTML = "";
+          STATE.renderedOverlayHtml = "";
+        }
+        return;
+      }
+
+      DOM.overlay.className = "is-visible";
+      if (STATE.renderedOverlayHtml !== overlay.html) {
+        DOM.overlay.innerHTML = overlay.html;
+        STATE.renderedOverlayHtml = overlay.html;
+      }
+    }
+
+    function buildOverlayModel() {
+      if (STATE.screen !== "game") {
+        return null;
+      }
+
+      if (STATE.phase === "countdown") {
+        return {
+          html: `
+            <div class="overlay-card is-countdown">
+              <p class="overlay-kicker">Round ${STATE.round}</p>
+              <h2 class="overlay-title">${escapeHtml(STATE.countdownText || "3")}</h2>
+              <p class="overlay-copy">${STATE.suddenDeath ? "Pulls are doubled in this deciding round." : "First to drag the marker to their side wins the round."}</p>
+            </div>
+          `
+        };
+      }
+
+      if (STATE.phase === "waiting") {
+        return {
+          html: `
+            <div class="overlay-card">
+              <p class="overlay-kicker">Lobby</p>
+              <h2 class="overlay-title">Waiting For Opponent</h2>
+              <div class="matchup-row">
+                <span class="matchup-pill blue">${escapeHtml(STATE.players.blue.displayName)}</span>
+                <span>vs</span>
+                <span class="matchup-pill red">${escapeHtml(STATE.players.red.displayName)}</span>
+              </div>
+              <p class="overlay-copy">Share room <strong>${escapeHtml(STATE.roomCode.toUpperCase())}</strong>, use the same Ably key, and the missing lane will fill automatically through Ably presence.</p>
+            </div>
+          `
+        };
+      }
+
+      if (STATE.phase === "ready") {
+        return {
+          html: `
+            <div class="overlay-card">
+              <p class="overlay-kicker">${STATE.isSpectator ? "Spectator Mode" : "Match Ready"}</p>
+              <h2 class="overlay-title">${STATE.suddenDeath ? "Final Pull" : "Blue vs Red"}</h2>
+              <div class="matchup-row">
+                <span class="matchup-pill blue">${escapeHtml(STATE.players.blue.displayName)}</span>
+                <span>vs</span>
+                <span class="matchup-pill red">${escapeHtml(STATE.players.red.displayName)}</span>
+              </div>
+              <p class="overlay-copy">${STATE.isSpectator ? "You can watch every round live, but only the two active players can pull or taunt." : "Hit start when both players are ready. Desktop uses the spacebar and touch devices use the big pull button."}</p>
+              ${STATE.isSpectator ? "" : `<div class="overlay-actions"><button class="primary-button" type="button" data-action="start">Start Match</button></div>`}
+            </div>
+          `
+        };
+      }
+
+      if (STATE.phase === "roundEnd" || STATE.phase === "matchEnd") {
+        const lastWinner = STATE.roundHistory.length ? STATE.roundHistory[STATE.roundHistory.length - 1].winner : null;
+        const winnerName = lastWinner ? STATE.players[lastWinner].displayName : "Winner";
+        const isMatch = STATE.phase === "matchEnd";
+        const actionLabel = isMatch ? "Play Again" : "Next Round";
+        const action = isMatch ? "again" : "next";
+        const stats = STATE.lastRoundStats || buildRoundStats();
+
+        return {
+          html: `
+            <div class="overlay-card">
+              <p class="overlay-kicker">${isMatch ? "Match Over" : "Round ${STATE.round} Result"}</p>
+              <h2 class="overlay-title">${escapeHtml(winnerName)} ${isMatch ? "Wins" : "Takes It"}</h2>
+              <div class="overlay-pips">
+                ${renderOverlayPips("blue", stats.blue.wins)}
+              </div>
+              <div class="overlay-pips">
+                ${renderOverlayPips("red", stats.red.wins)}
+              </div>
+              <div class="stats-card">
+                <p class="stats-title">Post-Round Breakdown</p>
+                <div class="stats-grid">
+                  ${renderStatsRow("blue", "Hits", stats.blue.hits, Math.max(stats.blue.hits, stats.red.hits) || 1)}
+                  ${renderStatsRow("red", "Hits", stats.red.hits, Math.max(stats.blue.hits, stats.red.hits) || 1)}
+                  ${renderStatsRow("blue", "Peak Rate", stats.blue.peakRate + "/s", Math.max(stats.blue.peakRate, stats.red.peakRate) || 1, stats.blue.peakRate)}
+                  ${renderStatsRow("red", "Peak Rate", stats.red.peakRate + "/s", Math.max(stats.blue.peakRate, stats.red.peakRate) || 1, stats.red.peakRate)}
+                </div>
+                ${renderRateGraph(stats)}
+              </div>
+              ${STATE.isSpectator ? `<p class="overlay-copy">Watching live. Either player can launch the next round.</p>` : `<div class="overlay-actions"><button class="primary-button" type="button" data-action="${action}">${actionLabel}</button></div>`}
+            </div>
+          `
+        };
+      }
+
+      return null;
+    }
+
+    function renderOverlayPips(role, wins) {
+      let html = "";
+      for (let i = 0; i < CONFIG.ROUNDS_TO_WIN; i += 1) {
+        html += `<span class="overlay-pip${i < wins ? " is-filled" : ""}" title="${role} round pip"></span>`;
+      }
+      return html;
+    }
+
+    function renderStatsRow(role, label, value, max, numericValue) {
+      const measure = typeof numericValue === "number" ? numericValue : Number(value);
+      const width = clamp((measure / max) * 100, 0, 100);
+      return `
+        <div class="stats-row" data-role="${role}">
+          <span>${label}</span>
+          <div class="stats-bar"><div class="stats-bar-fill" style="width:${width}%"></div></div>
+          <span class="stats-value">${value}</span>
+        </div>
+      `;
+    }
+
+    function renderRateGraph(stats) {
+      const durationSec = Math.max(1, Math.ceil((stats.durationMs || 0) / 1000));
+      const maxRate = Math.max(
+        4,
+        Math.ceil(
+          Math.max(
+            stats.blue.peakRate || 0,
+            stats.red.peakRate || 0,
+            ...stats.blue.series.map((point) => point.rate || 0),
+            ...stats.red.series.map((point) => point.rate || 0)
+          )
+        )
+      );
+      const width = 340;
+      const height = 170;
+      const left = 34;
+      const right = 10;
+      const top = 12;
+      const bottom = 28;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+
+      const toPoints = (series) => {
+        const points = series.length ? series : [{ t: 0, rate: 0 }];
+        return points.map((point) => {
+          const x = left + clamp(point.t / 1000 / durationSec, 0, 1) * plotWidth;
+          const y = top + (1 - clamp(point.rate / maxRate, 0, 1)) * plotHeight;
+          return x.toFixed(1) + "," + y.toFixed(1);
+        }).join(" ");
+      };
+
+      return `
+        <div class="graph-shell">
+          <div class="graph-legend">
+            <span class="legend-chip" style="color:#4ab4e8;"><span class="legend-line"></span>Blue</span>
+            <span class="legend-chip" style="color:#f05c5c;"><span class="legend-line"></span>Red</span>
+          </div>
+          <svg class="rate-graph" viewBox="0 0 ${width} ${height}" aria-label="Round hit rate graph">
+            <rect x="0" y="0" width="${width}" height="${height}" rx="16" fill="rgba(255,255,255,0.55)"></rect>
+            <line x1="${left}" y1="${top}" x2="${left}" y2="${height - bottom}" stroke="#1a1a1a" stroke-width="3"></line>
+            <line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" stroke="#1a1a1a" stroke-width="3"></line>
+            <line x1="${left}" y1="${top}" x2="${width - right}" y2="${top}" stroke="rgba(26,26,26,0.12)" stroke-width="2"></line>
+            <line x1="${left}" y1="${top + plotHeight / 2}" x2="${width - right}" y2="${top + plotHeight / 2}" stroke="rgba(26,26,26,0.12)" stroke-width="2"></line>
+            <polyline fill="none" stroke="#4ab4e8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="${toPoints(stats.blue.series)}"></polyline>
+            <polyline fill="none" stroke="#f05c5c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="${toPoints(stats.red.series)}"></polyline>
+            <text x="${left - 8}" y="${top + 6}" text-anchor="end" font-size="12" font-weight="800" fill="#173348">${maxRate}</text>
+            <text x="${left - 8}" y="${top + plotHeight / 2 + 4}" text-anchor="end" font-size="12" font-weight="800" fill="#173348">${Math.round(maxRate / 2)}</text>
+            <text x="${left - 8}" y="${height - bottom + 4}" text-anchor="end" font-size="12" font-weight="800" fill="#173348">0</text>
+            <text x="${left}" y="${height - 8}" text-anchor="start" font-size="12" font-weight="800" fill="#173348">0s</text>
+            <text x="${width - right}" y="${height - 8}" text-anchor="end" font-size="12" font-weight="800" fill="#173348">${durationSec}s</text>
+            <text x="${width / 2}" y="${height - 8}" text-anchor="middle" font-size="12" font-weight="900" fill="#173348">Seconds</text>
+            <text x="16" y="${height / 2}" text-anchor="middle" font-size="12" font-weight="900" fill="#173348" transform="rotate(-90 16 ${height / 2})">Hit Rate</text>
+          </svg>
+        </div>
+      `;
+    }
+
+    /*
+      ==========================================================
+      MOBILE
+      ==========================================================
+    */
+    function sendTaunt(emoji) {
+      if (STATE.isSpectator || !STATE.role || STATE.phase !== "playing") {
+        return;
+      }
+      if (Date.now() < STATE.tauntCooldownUntil) {
+        return;
+      }
+
+      const targetRole = STATE.role === "blue" ? "red" : "blue";
+      STATE.tauntCooldownUntil = Date.now() + CONFIG.TAUNT_COOLDOWN_MS;
+      STATE.players[targetRole].taunt = emoji;
+      STATE.players[targetRole].tauntUntil = Date.now() + CONFIG.TAUNT_DURATION_MS;
+      safePublish("taunt", {
+        matchId: STATE.matchId,
+        round: STATE.round,
+        emoji,
+        targetRole
+      });
+      render();
+    }
+
+    /*
+      ==========================================================
+      HELPERS
+      ==========================================================
+    */
+    function makePlayerState(fallbackName) {
+      return {
+        displayName: fallbackName,
+        hits: 0,
+        rate: 0,
+        peakRate: 0,
+        wins: 0,
+        recentHits: [],
+        burstHits: [],
+        rateSeries: [],
+        fatigueUntil: 0,
+        pulseUntil: 0,
+        taunt: "",
+        tauntUntil: 0
+      };
+    }
+
+    function captureRateSample(force) {
+      if (!STATE.roundStartedAt) {
+        return;
+      }
+      const now = Date.now();
+      if (!force && now - STATE.lastSeriesSampleAt < 220) {
+        return;
+      }
+      const elapsedMs = Math.max(0, now - STATE.roundStartedAt);
+      ["blue", "red"].forEach((role) => {
+        STATE.players[role].rateSeries.push({
+          t: elapsedMs,
+          rate: Number(STATE.players[role].rate.toFixed(2))
+        });
+      });
+      STATE.lastSeriesSampleAt = now;
+    }
+
+    function applyHitWindows(player, now) {
+      player.recentHits.push(now);
+      player.burstHits.push(now);
+      pruneHitWindows(player, now);
+      player.rate = player.recentHits.length / (CONFIG.RATE_WINDOW_MS / 1000);
+      player.peakRate = Math.max(player.peakRate, player.rate);
+    }
+
+    function maybeTriggerFatigue(player, now) {
+      pruneHitWindows(player, now);
+      if (now >= player.fatigueUntil && player.burstHits.length >= CONFIG.FATIGUE_TRIGGER_HITS) {
+        player.fatigueUntil = now + CONFIG.FATIGUE_DURATION_MS;
+        player.burstHits = [];
+      }
+    }
+
+    function recordRemoteHit(player, hitTime, rate, peakRate, tiredUntil) {
+      player.recentHits.push(hitTime);
+      player.burstHits.push(hitTime);
+      pruneHitWindows(player, Date.now());
+      player.rate = rate;
+      player.peakRate = Math.max(player.peakRate, peakRate);
+      player.fatigueUntil = Math.max(player.fatigueUntil, tiredUntil);
+    }
+
+    function pruneHitWindows(player, now) {
+      player.recentHits = player.recentHits.filter((time) => now - time <= CONFIG.RATE_WINDOW_MS);
+      player.burstHits = player.burstHits.filter((time) => now - time <= CONFIG.FATIGUE_WINDOW_MS);
+    }
+
+    function isPlayerTired(player, now) {
+      return now < player.fatigueUntil;
+    }
+
+    function sanitizeRoomCode(value) {
+      return value.toLowerCase().replace(/[^a-z0-9-_]/g, "").slice(0, 24);
+    }
+
+    function safeName(value, fallback) {
+      const trimmed = String(value || "").trim();
+      return trimmed ? trimmed.slice(0, 20) : fallback;
+    }
+
+    function createId(prefix) {
+      return prefix + "-" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function clearCountdownTimers() {
+      while (STATE.roundTimerIds.length) {
+        window.clearTimeout(STATE.roundTimerIds.pop());
+      }
+    }
+
+    function clearResolveTimer() {
+      if (STATE.resolveTimerId) {
+        window.clearTimeout(STATE.resolveTimerId);
+        STATE.resolveTimerId = null;
+      }
+    }
+
+    function describeRoleStatus(role) {
+      const occupant = STATE.roster[role];
+      if (!occupant) {
+        return "Open lane";
+      }
+      if (occupant.clientId === STATE.clientId) {
+        return "You are here";
+      }
+      const occupantName = safeName(occupant.data && occupant.data.name, role === "blue" ? "Blue" : "Red");
+      return occupantName + " is parked here";
+    }
+
+    function describeLocalSeat() {
+      if (STATE.isSpectator) {
+        return "Spectator";
+      }
+      if (!STATE.role) {
+        return "Waiting";
+      }
+      return STATE.role === "blue" ? "Blue" : "Red";
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function formatAblyError(error, fallback) {
+      if (!error) {
+        return fallback;
+      }
+      const parts = [];
+      if (error.message) {
+        parts.push(error.message);
+      }
+      if (typeof error.code !== "undefined") {
+        parts.push("(code " + error.code + ")");
+      }
+      return parts.length ? parts.join(" ") : fallback;
+    }
+
+    function withTimeout(promise, timeoutMs, message) {
+      return new Promise((resolve, reject) => {
+        const timer = window.setTimeout(() => {
+          reject(new Error(message));
+        }, timeoutMs);
+
+        promise.then((value) => {
+          window.clearTimeout(timer);
+          resolve(value);
+        }).catch((error) => {
+          window.clearTimeout(timer);
+          reject(error);
+        });
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function updateLiveStats() {
+      const now = Date.now();
+      ["blue", "red"].forEach((role) => {
+        const player = STATE.players[role];
+        pruneHitWindows(player, now);
+        if (now >= player.tauntUntil) {
+          player.taunt = "";
+        }
+        if (STATE.phase === "playing" || STATE.phase === "resolving") {
+          player.rate = player.recentHits.length / (CONFIG.RATE_WINDOW_MS / 1000);
+        } else if (STATE.phase !== "roundEnd" && STATE.phase !== "matchEnd") {
+          player.rate = 0;
+        }
+      });
+      if (STATE.phase === "playing" || STATE.phase === "resolving") {
+        captureRateSample(false);
+      }
+      if (STATE.screen === "game") {
+        renderScorebar("blue");
+        renderScorebar("red");
+        renderCharacters();
+        renderButtons();
+      }
+    }
+
+    /*
+      ==========================================================
+      AUDIO
+      ==========================================================
+    */
+    function ensureAudioContext() {
+      if (!STATE.audioContext) {
+        STATE.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (STATE.audioContext.state === "suspended") {
+        STATE.audioContext.resume().catch(() => {});
+      }
+      return STATE.audioContext;
+    }
+
+    function playHitSound(volume, frequency) {
+      try {
+        const audio = ensureAudioContext();
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(volume, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.09);
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+        oscillator.start();
+        oscillator.stop(audio.currentTime + 0.1);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function playCountdownSound(frequency) {
+      playHitSound(0.08, frequency);
+    }
+
+    function playWinSound() {
+      try {
+        const audio = ensureAudioContext();
+        [523, 659, 784].forEach((frequency, index) => {
+          const oscillator = audio.createOscillator();
+          const gain = audio.createGain();
+          oscillator.type = "triangle";
+          oscillator.frequency.value = frequency;
+          gain.gain.setValueAtTime(0.001, audio.currentTime + index * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.1, audio.currentTime + index * 0.08 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + index * 0.08 + 0.24);
+          oscillator.connect(gain);
+          gain.connect(audio.destination);
+          oscillator.start(audio.currentTime + index * 0.08);
+          oscillator.stop(audio.currentTime + index * 0.08 + 0.26);
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    /*
+      ==========================================================
+      EVENTS
+      ==========================================================
+    */
+    DOM.joinForm.addEventListener("submit", joinRoom);
+    DOM.roleButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setPreferredRole(button.dataset.role);
+      });
+    });
+
+    DOM.muteButton.addEventListener("click", () => {
+      STATE.soundEnabled = !STATE.soundEnabled;
+      if (STATE.soundEnabled) {
+        ensureAudioContext();
+      }
+      render();
+    });
+
+    DOM.pullButton.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      registerLocalHit();
+    });
+
+    DOM.tauntButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        sendTaunt(button.dataset.taunt || "");
+      });
+    });
+
+    DOM.overlay.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-action]");
+      if (!button || !DOM.overlay.contains(button)) {
+        return;
+      }
+      const action = button.getAttribute("data-action");
+      if (action === "start") {
+        requestStart("start");
+      } else if (action === "next") {
+        requestStart("next");
+      } else if (action === "again") {
+        requestStart("again");
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.code !== "Space" && event.key !== " ") {
+        return;
+      }
+      if (event.repeat) {
+        return;
+      }
+      if (STATE.screen !== "game") {
+        return;
+      }
+      event.preventDefault();
+      registerLocalHit();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      cleanupAbly();
+    });
+
+    window.setInterval(updateLiveStats, 120);
+    render();
+  </script>
+</body>
+</html>
